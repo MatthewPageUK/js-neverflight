@@ -1,0 +1,82 @@
+body { padding: 0px; margin: 0px; background-color: white; font-family: 'Thasadith'; }
+h1 { position: absolute; width: 100%; bottom: 0px; margin: 0px; padding: 10px; left: 0px; background-color: black; color: deeppink; }
+h3 { padding: 0px; margin: 0 0 3px 0; }
+p { padding: 0px; margin: 0 0 5px 0; }
+input[type=text] { width: 70px; }
+button.full { width: 200px; }
+button.half { width: 98px; }
+button.fifth { width: 37px; }
+
+div.hud {
+	position: absolute;
+	border: 1px solid lightgrey;
+	border-radius: 5px;
+	padding: 10px;
+	width: 200px;
+	background-color: rgb(255,255,255,0.8);
+	z-index: 10000;
+}
+
+#fc {
+	top: 10px;
+	left: 10px;
+}
+#tx {
+	top: 10px;
+	left: 740px;
+}
+#pid {
+	top: 10px;
+	left: 250px;
+}
+#pid p {
+	padding: 0px;
+	margin: 0 0 3px 0;
+}
+#pid span {
+	display: inline-block;
+	width: 75px;
+	font-weight: bold;
+}
+#tune {
+	top: 10px;
+	left: 500px;
+}
+#tune p {
+	padding: 0px;
+	margin: 0 0 3px 0;
+}
+#tune span {
+	display: inline-block;
+	width: 75px;
+	font-weight: bold;
+}
+
+
+#blackbox {
+	top: 10px;
+	right: 10px;
+	width: 300px;
+	font-size: 0.85em;
+}
+#blackboxLog {
+	height: 400px;
+	overflow: scroll;
+	line-height: 1.5em;
+}
+#quad {
+	position: absolute;
+	width: 150px;
+	height: 45px;
+	top: 300px;
+	left: 0;
+	right: 0;
+	margin: 0 auto 0 auto;
+	background-image: url(../gfx/drone.png);
+}
+
+#graph {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+}

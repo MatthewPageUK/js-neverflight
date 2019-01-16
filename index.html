@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<title>Javascript - Quadcopter PID Loop Example</title>
+		<link href="https://fonts.googleapis.com/css?family=Thasadith" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Old+Standard+TT:400i" rel="stylesheet">
+		<link href="css/main.css" rel="stylesheet">
+		<meta name="author" content="Matthew Page">
+	</head>
+	<body>	
+		<div id="pidDemo">
+			<h1>ItWillNeverFlight v0.1</h1>
+			<canvas id="graph"></canvas>
+			<div class="hud" id="blackbox">
+				<h3>Blackbox recorder</h3>
+				<div id="blackboxLog"></div>
+			</div>
+			
+			<div class="hud" id="fc">
+				<h3>Flight Controller</h3>
+				<p>Flight controller ready...</p>
+				<p>Desired angle <span id="fcDA">0</span></p>
+				<p>Gyro angle <span id="fcGyro">0</span></p>
+				<button id="butNext" onclick="sendClockTick()" class="full">Next PID loop</button><br />
+				<button id="butStart" onclick="play()" class="half">Start Loop</button>
+				<button id="butStop" onclick="stop()" class="half">Stop Loop</button>
+				<p>Wind <input id="wind" type="checkbox" value="1"></p>
+			</div>
+			
+			<div class="hud" id="tune">
+				<h3>Tune</h3>
+				<p><span>P</span> <input onchange="tuneChanged=true; draw(); " type="text" value="1" id="pTune"></p>
+				<p><span>I</span> <input onchange="tuneChanged=true; draw(); " type="text" value="1" id="iTune"></p>
+				<p><span>D</span> <input onchange="tuneChanged=true; draw(); " type="text" value="1" id="dTune"></p>
+				<button id="butSaveTune" onclick="saveTune()">Save</button>
+			</div>
+			<div class="hud" id="pid">			
+				<h3>PID Controller</h3>
+				<table>
+					<tr><th>Name</th><th>Now</th><th>Prev</th></tr>	
+					<tr><td>P</td><td id="pidP">0</td><td id="ppidP">0</td></tr>
+					<tr><td>I</td><td id="pidI">0</td><td id="ppidI">0</td></tr>
+					<tr><td>D</td><td id="pidD">0</td><td id="ppidD">0</td></tr>
+					<tr><td>Err</td><td id="pidE">0</td><td id="ppidE">0</td></tr>
+					<tr><td>DT</td><td id="pidDT">0</td><td id="ppidDT">0</td></tr>
+				</table>
+			</div>
+
+			<div class="hud" id="tx">
+				<h3>Transmitter</h3>
+				<p>Rotate to angle ( -90 to 90 )
+					<input type="text" value="0" id="txA"> <button onclick="sendCommand()">Send command</button></p>
+				<p>Quick commands</p>
+				<p>
+					<button class="fifth" onclick="document.getElementById('txA').value='-85'; sendCommand();">-85</button>
+					<button class="fifth" onclick="document.getElementById('txA').value='-45'; sendCommand();">-45</button>
+					<button class="fifth" onclick="document.getElementById('txA').value='0'; sendCommand();">0</button>
+					<button class="fifth" onclick="document.getElementById('txA').value='45'; sendCommand();">45</button>
+					<button class="fifth" onclick="document.getElementById('txA').value='85'; sendCommand();">85</button>
+				</p>
+			</div>
+			<div id="quad"></div>
+		</div>
+		<script src="js/blackbox.js" type="text/javascript"></script>
+		<script src="js/gyro.js" type="text/javascript"></script>
+		<script src="js/pid.js" type="text/javascript"></script>
+		<script src="js/flight-controller.js" type="text/javascript"></script>
+		<script type="text/javascript">
+
+			/* Build the quad, no soldering required */
+
+			const myBlackbox = new Blackbox();
+			const myGyro = new Gyro(myBlackbox);
+			const myPID = new PID(myBlackbox);
+			const myFC = new FlightController(myGyro, myPID, myBlackbox);
+			
+			/* Stuff for visualising the system */
+			const tuneP = document.getElementById("tuneP");
+			const tuneI = document.getElementById("tuneI");
+			const tuneD = document.getElementById("tuneD");
+			const pidP = document.getElementById("pidP");
+			const pidI = document.getElementById("pidI");
+			const pidD = document.getElementById("pidD");
+			const pidE = document.getElementById("pidE");
+			const pidDT = document.getElementById("pidDT");
+
+			
+			const ppidP = document.getElementById("ppidP");
+			const ppidI = document.getElementById("ppidI");
+			const ppidD = document.getElementById("ppidD");
+			const ppidE = document.getElementById("ppidE");
+			const ppidDT = document.getElementById("ppidDT");
+			
+			const fcDA = document.getElementById("fcDA");
+			const fcGyro = document.getElementById("fcGyro");
+			const fcM = document.getElementById("fcM");
+			const fcMD = document.getElementById("fcMD");
+			
+			const wind = document.getElementById("wind");
+			
+			const bb = document.getElementById("blackboxLog");
+			const txA = document.getElementById("txA");
+			const quad = document.getElementById("quad");
+			const graph = document.getElementById("graph");
+			const graphPaper = graph.getContext("2d");			
+			let looper = false;
+			let loops = 0;
+			let lastGyro = 0;
+			let lastDesired = 0;
+			let tuneChanged = false;
+			graph.width = window.innerWidth;
+			graph.height = window.innerHeight;
+			
+			draw();
+			
+			function sendCommand() {
+				myFC.receiveCommand(txA.value);
+				draw();
+			}
+			function saveTune() {
+				myPID.pTune = pTune.value/100;
+				myPID.iTune = iTune.value/100;
+				myPID.dTune = dTune.value/100;
+				myPID.reset();
+				tuneChanged = false;
+				draw();
+			}
+			function sendClockTick() {
+				lastGyro = myGyro.angle;
+				lastDesired = myFC.desiredAngle;
+				myFC.doPIDLoop();
+				draw();
+				loops += 1;
+				
+			}
+			function play() {
+				looper = setInterval(sendClockTick, 100);
+			}
+			function stop() {
+				clearInterval(looper);
+				looper = false;
+				draw();
+			}
+			
+			
+			
+			
+			
+			function draw() {
+
+				ppidP.textContent = pidP.textContent;
+				ppidI.textContent = pidI.textContent;
+				ppidD.textContent = pidD.textContent;
+				ppidE.textContent = pidE.textContent;
+				ppidDT.textContent = pidDT.textContent;
+				
+				pidP.textContent = parseFloat(myPID.p * myPID.pTune).toFixed(3);
+				pidI.textContent = parseFloat(myPID.i * myPID.iTune).toFixed(3);
+				pidD.textContent = parseFloat(myPID.d * myPID.dTune).toFixed(3);
+				pidE.textContent = parseFloat(myPID.error).toFixed(3);
+				pidDT.textContent = myPID.dt;
+				
+				
+				
+				fcDA.textContent = myFC.desiredAngle;
+				fcGyro.textContent = parseFloat(myGyro.angle).toFixed(2);
+				
+				
+				
+				if(looper) {
+					document.getElementById("butNext").disabled = true;
+					document.getElementById("butStart").disabled = true;
+					document.getElementById("butStop").disabled = false;
+				} else {
+					document.getElementById("butNext").disabled = false;
+					document.getElementById("butStart").disabled = false;
+					document.getElementById("butStop").disabled = true;
+				}
+				
+				if(tuneChanged) {
+					document.getElementById("butSaveTune").disabled = false;
+				} else {
+					document.getElementById("butSaveTune").disabled = true;
+				}
+				
+
+				
+				let tmp = myBlackbox.entries.slice(0);
+				bb.innerHTML = tmp.reverse().join("<Br>");
+				quad.style.transform = `rotate(${myGyro.angle}deg)`;
+				//graphPaper.fillStyle = `rgb(255,0,0)`;
+				//graphPaper.fillRect(loops*10, 300+(myGyro.angle*3), 10, 10);
+			//	graphPaper.fillStyle = `rgb(0,255,0)`;
+			//	graphPaper.fillRect(loops*10, 300+(myFC.desiredAngle*3), 10, 10);	
+
+				let pda = 0;
+				let pa = 0;
+				let lp = 0;
+				
+				graphPaper.clearRect(0,0,graph.width, graph.height);
+				graphPaper.beginPath();
+				graphPaper.moveTo(lp*10, 300);
+				myBlackbox.dataLog.forEach( (data) => {
+
+					graphPaper.lineTo(lp*10, 300+(data.gyroAngle*3));
+					
+					pda = data.desiredAngle;
+					pa = data.gyroAngle;
+					lp += 1;
+				});
+				graphPaper.strokeStyle = `rgb(255,0,0)`;
+				graphPaper.stroke();
+
+				/* Desired angle */
+				lp = 0;
+				graphPaper.beginPath();
+				graphPaper.moveTo(lp*10, 300);
+				myBlackbox.dataLog.forEach( (data) => {
+					graphPaper.lineTo(lp*10, 300+(data.desiredAngle*3));
+					lp += 1;
+				});
+				graphPaper.strokeStyle = `rgb(0,255,0)`;
+				graphPaper.stroke();
+
+				/*
+						graphPaper.beginPath();
+					graphPaper.moveTo((loops-1)*10, 300+(lastDesired*3));
+					graphPaper.lineTo(loops*10, 300+(myFC.desiredAngle*3));
+					graphPaper.strokeStyle = `rgb(0,255,0)`;
+					graphPaper.stroke();	 */		
+				
+				
+			}
+		</script>
+	</body>
+</html>
