@@ -1,4 +1,4 @@
-body { padding: 0px; margin: 0px; background-color: white; font-family: 'Thasadith'; }
+body { font-size: 0.9em; padding: 0px; margin: 0px; background-color: white; font-family: 'Poppins', sans-serif;}
 h1 { position: absolute; width: 100%; bottom: 0px; margin: 0px; padding: 10px; left: 0px; background-color: black; color: deeppink; }
 h3 { padding: 0px; margin: 0 0 3px 0; }
 p { padding: 0px; margin: 0 0 5px 0; }

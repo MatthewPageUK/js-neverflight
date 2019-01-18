@@ -110,5 +110,19 @@ class FlightController {
 		
 		this.blackbox.logData(this.desiredAngle, this.gyro.angle);
 	}
+	
+	
+	
+	rotateQuad(direction, amount) {
+	
+		/*
+			v = 123;
+			this.motor1.receiveVoltageInput( v );
+			
+			angle += this.motor1.thrust
+		
+		*/
+		
+	}
 }
 			

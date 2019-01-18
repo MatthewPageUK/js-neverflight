@@ -1,0 +1,28 @@
+{
+  "name": "neverflight",
+  "version": "0.0.1",
+  "description": "A quadcopter simulation and interactive tools.",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MatthewPageUK/js-neverflight.git"
+  },
+  "keywords": [
+    "drone",
+    "quadcopter",
+    "quad",
+    "fpv",
+    "pid",
+    "pidloop",
+    "fc"
+  ],
+  "author": "Matthew Page",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MatthewPageUK/js-neverflight/issues"
+  },
+  "homepage": "https://github.com/MatthewPageUK/js-neverflight#readme"
+}
